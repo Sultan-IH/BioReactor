@@ -2,8 +2,8 @@
 folder structure:
 
 * SubSystems:
-	* Item Stirring
+	* Stirring
 	* Temperature
 	* UI
-	* Item pH
-Prod:  <!---Production Folder---> 
+	* pH
+* Prod:  <!---Production Folder---> 
