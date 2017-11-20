@@ -1,5 +1,5 @@
 # BioReactor
-folder structure:
+Folder structure:
 
 * SubSystems:
 	* Stirring
