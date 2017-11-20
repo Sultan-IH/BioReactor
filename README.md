@@ -1,9 +1,9 @@
 # BioReactor
 folder structure:
 
-SubSystems:
-	* Stirring
+* SubSystems:
+	* Item Stirring
 	* Temperature
-	*  UI
-	* pH
+	* UI
+	* Item pH
 Prod:  <!---Production Folder---> 
