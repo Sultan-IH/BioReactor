@@ -37,9 +37,6 @@ void draw(){
     drawAnalogRPM();
   }
   
-  textFont(f,200);
-  fill(0); 
-  text(currentPH,180,300); 
 }
 
 void getValue(){
@@ -76,7 +73,6 @@ void drawAnalogPH(){
    fill(#F1C40F);
    ellipse(220, 270, 380, 380);
    
-   fill(#F1C40F);
    ellipse(220, 580, 100, 100);
    
    rect(50, 545, 80, 80, 7);//bottom left button
@@ -86,6 +82,12 @@ void drawAnalogPH(){
    rect(360, 70, 40, 40, 7); // top left button (settings)
    
    rect(40, 70, 40, 40, 7); // top right button (mode)
+   
+   noFill();
+   stroke(176);
+   strokeWeight(20);
+   strokeCap(SQUARE);
+   arc(220, 270, 360, 360, PI-0.8, 2*PI+0.8);
 }
 
 void drawAnalogRPM(){//+840
@@ -106,6 +108,12 @@ void drawAnalogRPM(){//+840
    rect(1200, 70, 40, 40, 7); // top left button (settings)
    
    rect(880, 70, 40, 40, 7); // top right button (mode)
+   
+   noFill();
+   stroke(176);
+   strokeWeight(20);
+   strokeCap(SQUARE);
+   arc(1060, 270, 360, 360, PI-0.8, 2*PI+0.8);
   
 }
 
@@ -131,6 +139,10 @@ void drawDigitalTemp(){// + 420
    rect(780, 70, 40, 40, 7); // top left button (settings)
    
    rect(460, 70, 40, 40, 7); // top right button (mode)
+   
+  textFont(f,200);
+  fill(0); 
+  text(currentPH,640,270); 
    
 }
 
