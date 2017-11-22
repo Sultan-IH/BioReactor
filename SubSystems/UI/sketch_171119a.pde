@@ -1,46 +1,63 @@
 import processing.serial.*;
 
 Serial myPort;// The serial port from which the data will be recieved
+ // minimum and maximum angles for analog view
+float minAngle = 0.8;
+float maxAngle = 2*PI-0.75;
 
+// Font for the text ###Have a look at other fonts###
 PFont f;
 
-Boolean analogPH = true;
-Boolean analogRPM = true;
+// 0 - Analog, 1 - Digital, 2 - Graph
+int stateRPM = 0;
+int statePH = 0;
+// 0 - Digital, 1 - Graph
+int stateTemp = 0;
 
-Boolean graphPH = false;
-Boolean graphTemp = false;
-Boolean graphRPM = false;
+// Current values of the sensors
+Integer currentRPM = 1500;
+Integer currentPH = 7;
+Integer currentTemp = 25;
 
-Integer currentPH = 0;
+Integer neededRPM = 0;
+Integer neededPH = 0;
+Integer neededTemp = 0;
 
 void setup() {
   
   size(1280, 720);
   
   f = createFont("Arial",16,true);
-  //myPort = new Serial(this, Serial.list()[3], 4800);
+  myPort = new Serial(this, Serial.list()[1], 9600);
 }
 
 void draw(){
   background(255, 204, 0);
   
-  if (analogPH == true && graphPH == false){ // Shows analog PH
-    drawAnalogPH();
+  getValue();
+  
+  if (stateRPM == 0){ // Shows analog PH
+    drawAnalogPH(currentPH, neededPH);
   }
   
-  if (graphTemp == false){ // Shows digital Temperature
+  if (stateTemp == 0){ // Shows digital Temperature
   
-    drawDigitalTemp();
+    drawDigitalTemp(currentTemp, neededTemp);
   }
   
-  if (analogRPM == true && graphRPM == false){ // Shows analog RPM
-    drawAnalogRPM();
-  }
+  if (stateRPM == 0){ // Shows analog RPM
+    drawAnalogRPM(currentRPM, neededRPM);
+  } 
   
 }
 
 void getValue(){
-  
+  if (myPort.available() > 0){ // if the porst is empty
+    String str = myPort.readString(); // Reads the serail value
+    if (str.charAt(0) == 'a' && str.charAt(str.length()-1) == 'a'){
+      println(str);
+    }
+  }
 }
 
 void updateValues(){
@@ -63,17 +80,24 @@ void tempSettings(){
   
 }
 
-void drawAnalogPH(){
-  /*This is to be used as a template*/
-  
+void drawAnalogPH(int value, int neededValue){
+   float min = 0;
+   float max = 14;
+   
    noStroke();
-   fill(#CCFFAA);
-   rect(20, 50, 400, 620);
+   
+   if (value == neededValue){// Pick the colour for the BG
+     fill(#28B463);
+   }else{
+     fill(#FF2D00);
+   }
+   
+   rect(20, 50, 400, 620); // Background for the section
    
    fill(#F1C40F);
-   ellipse(220, 270, 380, 380);
+   ellipse(220, 270+30, 380, 380); // Main face
    
-   ellipse(220, 580, 100, 100);
+   ellipse(220, 580, 100, 100); // The required value Face
    
    rect(50, 545, 80, 80, 7);//bottom left button
    
@@ -83,23 +107,51 @@ void drawAnalogPH(){
    
    rect(40, 70, 40, 40, 7); // top right button (mode)
    
+   // Create the Arc around the meter
    noFill();
    stroke(176);
    strokeWeight(20);
    strokeCap(SQUARE);
-   arc(220, 270, 360, 360, PI-0.8, 2*PI+0.8);
+   arc(220, 270+30, 360, 360, PI-0.8, 2*PI+0.8);
+   
+   // Creates the arrow on the dial
+   noStroke();
+   fill(1);
+   translate(220, 270+30);
+   rotate(workOutPos(min, max, value));
+   rect(0,0,10,190);
+   
+   // returns the other objects to original position
+   rotate(-workOutPos(min, max, value));
+   translate(-220, -270-30);
+   
+   textFont(f,50);// Neede text render
+   text(neededValue,210,598);
+   
+   text("pH", 190, 95);
+   
 }
 
-void drawAnalogRPM(){//+840
+void drawAnalogRPM(int value, int neededValue){//+840
+   // Minimum and maximum values of the sensor
+   float min = 0;
+   float max = 1500;
+   
    noStroke();
-   fill(#CCFFAA);
-   rect(860, 50, 400, 620);
+   
+   if (value == neededValue){// Pick the colour for the BG
+     fill(#28B463);
+   }else{
+     fill(#FF2D00);
+   }
+   
+   rect(860, 50, 400, 620); // Background for the section
    
    fill(#F1C40F);
-   ellipse(1060, 270, 380, 380);
+   ellipse(1060, 270, 380, 380); // Main face
    
    fill(#F1C40F);
-   ellipse(1060, 580, 100, 100);
+   ellipse(1060, 580, 100, 100); // The required value Face
    
    rect(890, 545, 80, 80, 7);//bottom left button
    
@@ -108,29 +160,49 @@ void drawAnalogRPM(){//+840
    rect(1200, 70, 40, 40, 7); // top left button (settings)
    
    rect(880, 70, 40, 40, 7); // top right button (mode)
-   
+
+   // Create the Arc around the meter
    noFill();
    stroke(176);
    strokeWeight(20);
    strokeCap(SQUARE);
    arc(1060, 270, 360, 360, PI-0.8, 2*PI+0.8);
-  
+   
+   // Creates the arrow on the dial
+   noStroke();
+   fill(0);
+   translate(1060, 270);
+   rotate(workOutPos(min, max, value));
+   rect(0,0,10,190);
+   
+   rotate(-workOutPos(min, max, value));
+   translate(-1060,-270);
+   
+   textFont(f,50);// Needed text render
+   text(neededValue,1060,598);
+
 }
 
 void drawDigitalPH(){
   
 }
 
-void drawDigitalTemp(){// + 420
+void drawDigitalTemp(int value, int neededValue){// + 420
    noStroke();
-   fill(#CCFFAA);
-   rect(440, 50, 400, 620);
+   
+   if (value == neededValue){// Pick the colour for the BG
+     fill(#28B463);
+   }else{
+     fill(#FF2D00);
+   }
+   
+   rect(440, 50, 400, 620); // Background for the section
    
    fill(#F1C40F);
-   ellipse(640, 270, 380, 380);
+   ellipse(640, 270, 380, 380); // Main face
    
    fill(#F1C40F);
-   ellipse(640, 580, 100, 100);
+   ellipse(640, 580, 100, 100); // The required value Face
    
    rect(470, 545, 80, 80, 7);//bottom left button
    
@@ -140,12 +212,21 @@ void drawDigitalTemp(){// + 420
    
    rect(460, 70, 40, 40, 7); // top right button (mode)
    
-  textFont(f,200);
-  fill(0); 
-  text(currentPH,640,270); 
+   // Shows the temp value
+   textFont(f,200);
+   fill(0);
+   text(value,530,330);
+   
+   textFont(f,50);
+   text(neededValue,610,598);
    
 }
 
 void drawDigitalRPM(){
   
+}
+
+float workOutPos(float min, float max, int current){
+  // Returns the position of the arrow on analog face
+  return ((maxAngle - minAngle)/(max-min))*current+0.8;
 }
