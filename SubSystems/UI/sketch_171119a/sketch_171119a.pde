@@ -1,3 +1,5 @@
+/// its touch friendly
+
 import processing.serial.*;
 
 Serial myPort;// The serial port from which the data will be recieved
@@ -14,6 +16,10 @@ int stateRPM = 0;
 int statePH = 0;
 // 0 - Digital, 1 - Graph
 int stateTemp = 0;
+
+Boolean isSettingsPH = false;
+Boolean isSettingsTemp = false;
+Boolean isSettingsRPM = false;
 
 // Current values of the sensors
 Integer currentRPM = 1500;
@@ -38,6 +44,8 @@ PImage modeAnalogButton;
 PImage modeGraphButton;
 PImage upButton;
 PImage downButton;
+
+Boolean isOn = true;
 void setup() {
   
   size(1280, 720);
@@ -53,7 +61,7 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  myPort = new Serial(this, Serial.list()[1], 9600);
+  myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
@@ -66,6 +74,10 @@ void draw(){
   }
   else if ( statePH == 1){
     drawDigitalPH(currentPH, neededPH);
+  }
+  
+  if (isSettingsPH){
+    drawSettingsPH(minPH, maxPH);
   }
   
   if (stateTemp == 0){ // Shows digital Temperature
@@ -85,6 +97,15 @@ void draw(){
 }
 
 void mouseClicked(){
+  
+  if (mouseOverRect(0,0,0,0)){
+    if (isOn){
+      isOn = false;
+    }else{
+      isOn = true;
+    }
+  }
+  
   if (mouseOverRect(360, 70, 40, 40)){
     if (statePH == 0){
       statePH = 1;
@@ -92,6 +113,15 @@ void mouseClicked(){
       statePH = 0;
     }
   }
+  
+  if (mouseOverRect(40,70,40,40)){
+    if (!isSettingsPH){
+      isSettingsPH = true;
+    }else{
+      isSettingsPH = false;
+    }
+  }
+    
   if (mouseOverRect(1200, 70, 40, 40)){
     if (stateRPM == 0){
       stateRPM = 1;
@@ -146,10 +176,12 @@ void getValue(){
     
     if(nums.length == 3){
       currentPH = nums[0];
-      currentPH = 7;
       currentTemp = nums[1];
-      currentTemp = 30;
       currentRPM = nums[2];
+      
+      // Test values
+      currentPH = 7;
+      currentTemp = 30;
       currentRPM = 1000;
     }
   }
@@ -168,6 +200,29 @@ void pHSettings(){
 }
 
 void tempSettings(){
+  
+}
+
+void drawSettingsPH(float min, float max){
+  noStroke();
+  
+  fill(#ECF0F1, 240);
+  rect(20,50,400,620);
+  
+  fill(#95A5A6, 230);
+  rect(40, 70, 40, 40, 7); // top left button (Back)
+  upButton.resize(0,40);
+  image(upButton, 40,40);
+  upButton.resize(0,80);
+  
+  rect(170, 178, 100, 45);
+  
+  fill(0);
+  textFont(f, 40);
+  text("Range", 40, 170);
+  text("Min", 60, 215);
+  text("Max", 60, 260);
+  
   
 }
 
@@ -274,6 +329,8 @@ void drawAnalogRPM(int value, int neededValue, float min, float max){//+840
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
    text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
 
 }
 
@@ -408,6 +465,8 @@ void drawDigitalRPM(int value, int neededValue){
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
    text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
 }
 
 float workOutPos(float min, float max, int current){
