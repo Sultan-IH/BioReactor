@@ -44,6 +44,8 @@ PImage modeAnalogButton;
 PImage modeGraphButton;
 PImage upButton;
 PImage downButton;
+PImage settingsUpButton;
+PImage settingsDownButton;
 
 Boolean isOn = true;
 void setup() {
@@ -58,6 +60,10 @@ void setup() {
   upButton.resize(0,80);
   downButton = loadImage("Picture2.png");
   downButton.resize(0,80);
+  settingsUpButton = loadImage("Picture3.png");
+  settingsUpButton.resize(0,40);
+  settingsDownButton = loadImage("Picture2.png");
+  settingsDownButton.resize(0,40);
   
   
   f = createFont("Arial",16,true);
@@ -211,9 +217,7 @@ void drawSettingsPH(float min, float max){
   
   fill(#95A5A6, 230);
   rect(40, 70, 40, 40, 7); // top left button (Back)
-  upButton.resize(0,40);
-  image(upButton, 40,40);
-  upButton.resize(0,80);
+  image(settingsUpButton, 40,40);
   
   rect(170, 178, 100, 45);
   
