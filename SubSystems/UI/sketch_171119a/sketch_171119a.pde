@@ -30,14 +30,14 @@ Integer neededRPM = 800;
 Integer neededPH = 7;
 Integer neededTemp = 30;
 
-float minPH = 0;
-float maxPH = 14;
+int minPH = 3;
+int maxPH = 8;
 
 float minTemp = 25;
 float maxTemp = 35;
 
-float minRPM = 0;
-float maxRPM = 1500;
+int minRPM = 0;
+int maxRPM = 1500;
 
 PImage modeDigitalButton;
 PImage modeAnalogButton;
@@ -104,7 +104,7 @@ void draw(){
 
 void mouseClicked(){
   
-  if (mouseOverRect(0,0,0,0)){
+  if (mouseOverRect(0,0,0,0)){ // On/Off button
     if (isOn){
       isOn = false;
     }else{
@@ -112,23 +112,80 @@ void mouseClicked(){
     }
   }
   
-  if (mouseOverRect(360, 70, 40, 40)){
-    if (statePH == 0){
-      statePH = 1;
-    }else{
-      statePH = 0;
+  if (isSettingsPH){ // When pH settings are open
+    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
+      if (!isSettingsPH){
+        isSettingsPH = true;
+      }else{
+        isSettingsPH = false;
+      }
+    }
+    
+    if (mouseOverRect(370,180,40,40)){
+      if (minPH<13){
+        if (minPH + 1 == maxPH){
+          minPH +=1;
+          maxPH +=1;
+        }else{
+          minPH += 1;
+      }
+      }
+    }
+    
+    if (mouseOverRect(325,180,40,40)){
+      if (minPH > 0){
+        minPH -= 1;
+      }
+    }
+    
+    if (mouseOverRect(370,230,40,40)){
+      if (maxPH <14){
+        maxPH += 1;
+      }
+    }
+    
+    if (mouseOverRect(325,230,40,40)){
+      if (maxPH > 1){
+        if (maxPH -1 == minPH){
+          maxPH-=1;
+          minPH-=1;
+        }else{
+          maxPH-=1;
+        }
+      }
+    }
+  }else{ // When pH settings are closed
+    if (mouseOverRect(360, 70, 40, 40)){ // pH state button
+      if (statePH == 0){
+        statePH = 1;
+      }else{
+        statePH = 0;
+      }
+    }
+    
+    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
+      if (!isSettingsPH){
+        isSettingsPH = true;
+      }else{
+        isSettingsPH = false;
+      }
+    }
+    
+    if (mouseOverRect(310,545,80,80)){ // pH up button
+      if (neededPH < maxPH){
+        neededPH +=1;
+      }
+    }
+    
+    if (mouseOverRect(50,545,80,80)){ // pH down button
+      if (neededPH > minPH){
+        neededPH -=1;
+      }
     }
   }
   
-  if (mouseOverRect(40,70,40,40)){
-    if (!isSettingsPH){
-      isSettingsPH = true;
-    }else{
-      isSettingsPH = false;
-    }
-  }
-    
-  if (mouseOverRect(1200, 70, 40, 40)){
+     
+  if (mouseOverRect(1200, 70, 40, 40)){ // RPM state button
     if (stateRPM == 0){
       stateRPM = 1;
     }else{
@@ -136,37 +193,27 @@ void mouseClicked(){
     }
   }
   
-  if (mouseOverRect(310,545,80,80)){
-    if (neededPH < maxPH){
-      neededPH +=1;
-    }
-  }
   
-  if (mouseOverRect(50,545,80,80)){
-    if (neededPH > minPH){
-      neededPH -=1;
-    }
-  }
   
-  if (mouseOverRect(730,545,80,80)){
+  if (mouseOverRect(730,545,80,80)){ // Temp up button
     if (neededTemp < maxTemp){
       neededTemp +=1;
     }
   }
   
-  if (mouseOverRect(470,545,80,80)){
+  if (mouseOverRect(470,545,80,80)){ // Temp down button
     if (neededTemp > minTemp){
       neededTemp -=1;
     }
   }
   
-  if (mouseOverRect(1150,545,80,80)){
+  if (mouseOverRect(1150,545,80,80)){ // RPM up button
     if (neededRPM < maxRPM){
       neededRPM +=100;
     }
   }
   
-  if (mouseOverRect(890,545,80,80)){
+  if (mouseOverRect(890,545,80,80)){ // RMP down button
     if (neededRPM > minRPM){
       neededRPM -=100;
     }
@@ -209,7 +256,7 @@ void tempSettings(){
   
 }
 
-void drawSettingsPH(float min, float max){
+void drawSettingsPH(int min, int max){
   noStroke();
   
   fill(#ECF0F1, 240);
@@ -217,20 +264,28 @@ void drawSettingsPH(float min, float max){
   
   fill(#95A5A6, 230);
   rect(40, 70, 40, 40, 7); // top left button (Back)
-  image(settingsUpButton, 40,40);
+  image(settingsUpButton, 370,180);
+  image(settingsDownButton, 325,180);
   
-  rect(170, 178, 100, 45);
+  rect(170, 178, 150, 45);
+  
+  image(settingsUpButton, 370,230);
+  image(settingsDownButton, 325,230);
+  
+  rect(170, 225, 150, 45);
   
   fill(0);
   textFont(f, 40);
   text("Range", 40, 170);
   text("Min", 60, 215);
+  text(min, 170,215);
   text("Max", 60, 260);
+  text(max, 170,260);
   
   
 }
 
-void drawAnalogPH(int value, int neededValue, float min, float max){   
+void drawAnalogPH(int value, int neededValue, int min, int max){   
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -282,7 +337,7 @@ void drawAnalogPH(int value, int neededValue, float min, float max){
    
 }
 
-void drawAnalogRPM(int value, int neededValue, float min, float max){//+840
+void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -473,9 +528,9 @@ void drawDigitalRPM(int value, int neededValue){
    text("RPM", 1000, 460);
 }
 
-float workOutPos(float min, float max, int current){
+float workOutPos(int min, int max, int current){
   // Returns the position of the arrow on analog face
-  return ((maxAngle - minAngle)/(max-min))*current+0.8;
+  return ((maxAngle - minAngle)/(max-min))*(current-min)+0.8;
 }
 
 boolean mouseOverRect(int x, int y, int w, int h) {
