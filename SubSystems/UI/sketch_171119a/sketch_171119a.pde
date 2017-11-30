@@ -39,6 +39,8 @@ float maxTemp = 35;
 int minRPM = 0;
 int maxRPM = 1500;
 
+PImage modeSettingsButton;
+PImage modeBackButton;
 PImage modeDigitalButton;
 PImage modeAnalogButton;
 PImage modeGraphButton;
@@ -52,10 +54,16 @@ void setup() {
   
   size(1280, 720);
   
+  modeSettingsButton = loadImage ("Picture8.png");
+  modeSettingsButton.resize(0,40);
+  modeBackButton = loadImage ("Picture9.png");
+  modeBackButton.resize(0,40);
   modeDigitalButton = loadImage ("Picture7.png");
   modeDigitalButton.resize(0,40);
   modeAnalogButton = loadImage("Picture5.png");
   modeAnalogButton.resize(0,40);
+  modeGraphButton = loadImage ("Picture4.png");
+  modeGraphButton.resize(0,40);
   upButton = loadImage("Picture3.png");
   upButton.resize(0,80);
   downButton = loadImage("Picture2.png");
@@ -80,6 +88,7 @@ void draw(){
   }
   else if ( statePH == 1){
     drawDigitalPH(currentPH, neededPH);
+   //else if (statePH == 2){ }
   }
   
   if (isSettingsPH){
@@ -87,14 +96,15 @@ void draw(){
   }
   
   if (stateTemp == 0){ // Shows digital Temperature
-  
     drawDigitalTemp(currentTemp, neededTemp);
+  //else if (stateTemp == 2){}
   }
   
   if (stateRPM == 0){ // Shows analog RPM
     drawAnalogRPM(currentRPM, neededRPM, minRPM, maxRPM);
   } else if (stateRPM == 1){
     drawDigitalRPM(currentRPM, neededRPM);
+    //else if (stateRPM == 2){}
   }
   
   
@@ -263,7 +273,7 @@ void drawSettingsPH(int min, int max){
   rect(20,50,400,620);
   
   fill(#95A5A6, 230);
-  rect(40, 70, 40, 40, 7); // top left button (Back)
+  image(modeBackButton, 40, 70); // top left button (Back)
   image(settingsUpButton, 370,180);
   image(settingsDownButton, 325,180);
   
@@ -309,6 +319,7 @@ void drawAnalogPH(int value, int neededValue, int min, int max){
    image(downButton,50, 545); // bottom left button (down)
    
    rect(40, 70, 40, 40, 7); // top left button (Settings)
+   image(modeSettingsButton, 40,70);
    
    image(modeDigitalButton, 360,70); // top right button (mode)
    
@@ -361,6 +372,7 @@ void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    image(downButton, 890, 545); // bottom left button (down)
    
    rect(880, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 880,70);
    
    image(modeDigitalButton, 1200,70); // top right button (mode)
 
@@ -418,9 +430,12 @@ void drawDigitalPH(int value, int neededValue){
    image(downButton,50, 545); // bottom left button (down)
    
    rect(40, 70, 40, 40, 7); // top left button (Settings)
+   image(modeSettingsButton, 40,70);
+   
    
    image(modeAnalogButton, 360,70); // top right button (mode)
    
+   image (modeGraphButton, 360, 120); // top right button (graph)
    
    // Shows the temp value
    textFont(f,200);
@@ -458,8 +473,12 @@ void drawDigitalTemp(int value, int neededValue){// + 420
    image(downButton, 470, 545); // bottom left button (down)
    
    rect(460, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 460,70);
+   
    
    image(modeAnalogButton, 780,70); // top right button (mode)
+   
+   image (modeGraphButton, 780, 120); // top right button (graph)
    
    // Shows the temp value
    textFont(f,200);
@@ -503,8 +522,12 @@ void drawDigitalRPM(int value, int neededValue){
    image(downButton, 890, 545); // bottom left button (down)
    
    rect(880, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 880,70);
+   
    
    image(modeAnalogButton, 1200,70); // top right button (mode)
+   
+   image (modeGraphButton, 1200, 120); // top right button (graph)
    
    noStroke();
    textFont(f,200);
