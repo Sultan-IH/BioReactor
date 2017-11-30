@@ -1,15 +1,10 @@
-/// Make 4 digit number smaller
-/// include the images
-/// make up and down buttons work
-/// add numbers to the faces
-/// comments the code
-/// Play around with the colours
-
+/// its touch friendly
 
 import processing.serial.*;
 
 Serial myPort;// The serial port from which the data will be recieved
- // minimum and maximum angles for analog view
+
+// minimum and maximum angles for analog view
 float minAngle = 0.8;
 float maxAngle = 2*PI-0.75;
 
@@ -22,44 +17,94 @@ int statePH = 0;
 // 0 - Digital, 1 - Graph
 int stateTemp = 0;
 
+Boolean isSettingsPH = false;
+Boolean isSettingsTemp = false;
+Boolean isSettingsRPM = false;
+
 // Current values of the sensors
 Integer currentRPM = 1500;
 Integer currentPH = 7;
 Integer currentTemp = 25;
 
 Integer neededRPM = 800;
-Integer neededPH = 5000;
+Integer neededPH = 7;
 Integer neededTemp = 30;
 
+int minPH = 3;
+int maxPH = 8;
+
+float minTemp = 25;
+float maxTemp = 35;
+
+int minRPM = 0;
+int maxRPM = 1500;
+
+PImage modeSettingsButton;
+PImage modeBackButton;
+PImage modeDigitalButton;
+PImage modeAnalogButton;
+PImage modeGraphButton;
+PImage upButton;
+PImage downButton;
+PImage settingsUpButton;
+PImage settingsDownButton;
+
+Boolean isOn = true;
 void setup() {
   
   size(1280, 720);
+  
+  modeSettingsButton = loadImage ("Picture8.png");
+  modeSettingsButton.resize(0,40);
+  modeBackButton = loadImage ("Picture9.png");
+  modeBackButton.resize(0,40);
+  modeDigitalButton = loadImage ("Picture7.png");
+  modeDigitalButton.resize(0,40);
+  modeAnalogButton = loadImage("Picture5.png");
+  modeAnalogButton.resize(0,40);
+  modeGraphButton = loadImage ("Picture4.png");
+  modeGraphButton.resize(0,40);
+  upButton = loadImage("Picture3.png");
+  upButton.resize(0,80);
+  downButton = loadImage("Picture2.png");
+  downButton.resize(0,80);
+  settingsUpButton = loadImage("Picture3.png");
+  settingsUpButton.resize(0,40);
+  settingsDownButton = loadImage("Picture2.png");
+  settingsDownButton.resize(0,40);
+  
   
   f = createFont("Arial",16,true);
   myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
-  background(255, 204, 0);
+  background(#F5D76E);
   
   getValue();
   
   if (statePH == 0){ // Shows analog PH
-    drawAnalogPH(currentPH, neededPH);
+    drawAnalogPH(currentPH, neededPH, minPH, maxPH);
   }
   else if ( statePH == 1){
     drawDigitalPH(currentPH, neededPH);
+   //else if (statePH == 2){ }
+  }
+  
+  if (isSettingsPH){
+    drawSettingsPH(minPH, maxPH);
   }
   
   if (stateTemp == 0){ // Shows digital Temperature
-  
     drawDigitalTemp(currentTemp, neededTemp);
+  //else if (stateTemp == 2){}
   }
   
   if (stateRPM == 0){ // Shows analog RPM
-    drawAnalogRPM(currentRPM, neededRPM);
+    drawAnalogRPM(currentRPM, neededRPM, minRPM, maxRPM);
   } else if (stateRPM == 1){
     drawDigitalRPM(currentRPM, neededRPM);
+    //else if (stateRPM == 2){}
   }
   
   
@@ -68,18 +113,119 @@ void draw(){
 }
 
 void mouseClicked(){
-  if (mouseOverRect(360, 70, 40, 40)){
-    if (statePH == 0){
-      statePH = 1;
+  
+  if (mouseOverRect(0,0,0,0)){ // On/Off button
+    if (isOn){
+      isOn = false;
     }else{
-      statePH = 0;
+      isOn = true;
     }
   }
-  if (mouseOverRect(1200, 70, 40, 40)){
+  
+  if (isSettingsPH){ // When pH settings are open
+    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
+      if (!isSettingsPH){
+        isSettingsPH = true;
+      }else{
+        isSettingsPH = false;
+      }
+    }
+    
+    if (mouseOverRect(370,180,40,40)){
+      if (minPH<13){
+        if (minPH + 1 == maxPH){
+          minPH +=1;
+          maxPH +=1;
+        }else{
+          minPH += 1;
+      }
+      }
+    }
+    
+    if (mouseOverRect(325,180,40,40)){
+      if (minPH > 0){
+        minPH -= 1;
+      }
+    }
+    
+    if (mouseOverRect(370,230,40,40)){
+      if (maxPH <14){
+        maxPH += 1;
+      }
+    }
+    
+    if (mouseOverRect(325,230,40,40)){
+      if (maxPH > 1){
+        if (maxPH -1 == minPH){
+          maxPH-=1;
+          minPH-=1;
+        }else{
+          maxPH-=1;
+        }
+      }
+    }
+  }else{ // When pH settings are closed
+    if (mouseOverRect(360, 70, 40, 40)){ // pH state button
+      if (statePH == 0){
+        statePH = 1;
+      }else{
+        statePH = 0;
+      }
+    }
+    
+    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
+      if (!isSettingsPH){
+        isSettingsPH = true;
+      }else{
+        isSettingsPH = false;
+      }
+    }
+    
+    if (mouseOverRect(310,545,80,80)){ // pH up button
+      if (neededPH < maxPH){
+        neededPH +=1;
+      }
+    }
+    
+    if (mouseOverRect(50,545,80,80)){ // pH down button
+      if (neededPH > minPH){
+        neededPH -=1;
+      }
+    }
+  }
+  
+     
+  if (mouseOverRect(1200, 70, 40, 40)){ // RPM state button
     if (stateRPM == 0){
       stateRPM = 1;
     }else{
       stateRPM = 0;
+    }
+  }
+  
+  
+  
+  if (mouseOverRect(730,545,80,80)){ // Temp up button
+    if (neededTemp < maxTemp){
+      neededTemp +=1;
+    }
+  }
+  
+  if (mouseOverRect(470,545,80,80)){ // Temp down button
+    if (neededTemp > minTemp){
+      neededTemp -=1;
+    }
+  }
+  
+  if (mouseOverRect(1150,545,80,80)){ // RPM up button
+    if (neededRPM < maxRPM){
+      neededRPM +=100;
+    }
+  }
+  
+  if (mouseOverRect(890,545,80,80)){ // RMP down button
+    if (neededRPM > minRPM){
+      neededRPM -=100;
     }
   }
 }
@@ -95,6 +241,11 @@ void getValue(){
       currentPH = nums[0];
       currentTemp = nums[1];
       currentRPM = nums[2];
+      
+      // Test values
+      currentPH = 7;
+      currentTemp = 30;
+      currentRPM = 1000;
     }
   }
 }
@@ -115,10 +266,36 @@ void tempSettings(){
   
 }
 
-void drawAnalogPH(int value, int neededValue){
-   float min = 0;
-   float max = 14;
-   
+void drawSettingsPH(int min, int max){
+  noStroke();
+  
+  fill(#ECF0F1, 240);
+  rect(20,50,400,620);
+  
+  fill(#95A5A6, 230);
+  image(modeBackButton, 40, 70); // top left button (Back)
+  image(settingsUpButton, 370,180);
+  image(settingsDownButton, 325,180);
+  
+  rect(170, 178, 150, 45);
+  
+  image(settingsUpButton, 370,230);
+  image(settingsDownButton, 325,230);
+  
+  rect(170, 225, 150, 45);
+  
+  fill(0);
+  textFont(f, 40);
+  text("Range", 40, 170);
+  text("Min", 60, 215);
+  text(min, 170,215);
+  text("Max", 60, 260);
+  text(max, 170,260);
+  
+  
+}
+
+void drawAnalogPH(int value, int neededValue, int min, int max){   
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -129,18 +306,22 @@ void drawAnalogPH(int value, int neededValue){
    
    rect(20, 50, 400, 620); // Background for the section
    
-   fill(#F1C40F);
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(20, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
    ellipse(220, 270+30, 380, 380); // Main face
    
    ellipse(220, 580, 100, 100); // The required value Face
    
-   rect(50, 545, 80, 80, 7);//bottom left button
+   image(upButton,310,545); // bottom right button (up)
    
-   rect(310, 545, 80, 80, 7);// bottom right button
+   image(downButton,50, 545); // bottom left button (down)
    
-   rect(360, 70, 40, 40, 7); // top left button (settings)
+   rect(40, 70, 40, 40, 7); // top left button (Settings)
+   image(modeSettingsButton, 40,70);
    
-   rect(40, 70, 40, 40, 7); // top right button (mode)
+   image(modeDigitalButton, 360,70); // top right button (mode)
    
    // Create the Arc around the meter
    noFill();
@@ -161,17 +342,13 @@ void drawAnalogPH(int value, int neededValue){
    translate(-220, -270-30);
    
    textFont(f,50);// Neede text render
-   text(neededValue,210 + getNeededPos(neededValue),598);
+   text(neededValue,207 + getNeededPos(neededValue),597);
    
    text("pH", 190, 95);
    
 }
 
-void drawAnalogRPM(int value, int neededValue){//+840
-   // Minimum and maximum values of the sensor
-   float min = 0;
-   float max = 1500;
-   
+void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -182,19 +359,22 @@ void drawAnalogRPM(int value, int neededValue){//+840
    
    rect(860, 50, 400, 620); // Background for the section
    
-   fill(#F1C40F);
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(860, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
    ellipse(1060, 270+30, 380, 380); // Main face
    
-   fill(#F1C40F);
    ellipse(1060, 580, 100, 100); // The required value Face
    
-   rect(890, 545, 80, 80, 7);//bottom left button
+   image(upButton, 1150,545); // bottom right button (up)
    
-   rect(1150, 545, 80, 80, 7);// bottom right button
+   image(downButton, 890, 545); // bottom left button (down)
    
-   rect(1200, 70, 40, 40, 7); // top left button (settings)
+   rect(880, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 880,70);
    
-   rect(880, 70, 40, 40, 7); // top right button (mode)
+   image(modeDigitalButton, 1200,70); // top right button (mode)
 
    // Create the Arc around the meter
    noFill();
@@ -214,15 +394,18 @@ void drawAnalogRPM(int value, int neededValue){//+840
    translate(-1060,-270-30);
    
    textFont(f,50);// Needed text render
+   if (str(neededValue).length() == 4){
+     textFont(f,42); 
+   }
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
    text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
 
 }
 
 void drawDigitalPH(int value, int neededValue){
-   float min = 0;
-   float max = 14;
    
    noStroke();
    
@@ -234,18 +417,25 @@ void drawDigitalPH(int value, int neededValue){
    
    rect(20, 50, 400, 620); // Background for the section
    
-   fill(#F1C40F);
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(20, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
    ellipse(220, 270+30, 380, 380); // Main face
    
    ellipse(220, 580, 100, 100); // The required value Face
    
-   rect(50, 545, 80, 80, 7);//bottom left button
+   image(upButton,310,545); // bottom right button (up)
    
-   rect(310, 545, 80, 80, 7);// bottom right button
-   
-   rect(360, 70, 40, 40, 7); // top right button (mode)
+   image(downButton,50, 545); // bottom left button (down)
    
    rect(40, 70, 40, 40, 7); // top left button (Settings)
+   image(modeSettingsButton, 40,70);
+   
+   
+   image(modeAnalogButton, 360,70); // top right button (mode)
+   
+   image (modeGraphButton, 360, 120); // top right button (graph)
    
    // Shows the temp value
    textFont(f,200);
@@ -253,7 +443,7 @@ void drawDigitalPH(int value, int neededValue){
    text(value,170 + getDigitPos(value) ,330+30); // Actaul text render
    
    textFont(f,50);// Needed text render
-   text(neededValue,210 + getNeededPos(neededValue),598);
+   text(neededValue,207+ getNeededPos(neededValue),597);
    
    text("pH", 190, 95);
    
@@ -270,19 +460,25 @@ void drawDigitalTemp(int value, int neededValue){// + 420
    
    rect(440, 50, 400, 620); // Background for the section
    
-   fill(#F1C40F);
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(440, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
    ellipse(640, 270+30, 380, 380); // Main face
    
-   fill(#F1C40F);
    ellipse(640, 580, 100, 100); // The required value Face
    
-   rect(470, 545, 80, 80, 7);//bottom left button
+   image(upButton, 730, 545); // bottom right button (up)
    
-   rect(730, 545, 80, 80, 7);// bottom right button
+   image(downButton, 470, 545); // bottom left button (down)
    
-   rect(780, 70, 40, 40, 7); // top left button (settings)
+   rect(460, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 460,70);
    
-   rect(460, 70, 40, 40, 7); // top right button (mode)
+   
+   image(modeAnalogButton, 780,70); // top right button (mode)
+   
+   image (modeGraphButton, 780, 120); // top right button (graph)
    
    // Shows the temp value
    textFont(f,200);
@@ -293,6 +489,8 @@ void drawDigitalTemp(int value, int neededValue){// + 420
    text(neededValue,630 + getNeededPos(neededValue),598); // needed text render
    
    text("Temperature", 500, 95);
+   
+   text("°C", 610, 460);
    
 }
 
@@ -311,35 +509,51 @@ void drawDigitalRPM(int value, int neededValue){
    
    rect(860, 50, 400, 620); // Background for the section
    
-   fill(#F1C40F);
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(860, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
    ellipse(1060, 270+30, 380, 380); // Main face
    
-   fill(#F1C40F);
    ellipse(1060, 580, 100, 100); // The required value Face
    
-   rect(890, 545, 80, 80, 7);//bottom left button
+   image(upButton, 1150,545); // bottom right button (up)
    
-   rect(1150, 545, 80, 80, 7);// bottom right button
+   image(downButton, 890, 545); // bottom left button (down)
    
-   rect(1200, 70, 40, 40, 7); // top left button (settings)
+   rect(880, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 880,70);
    
-   rect(880, 70, 40, 40, 7); // top right button (mode)
+   
+   image(modeAnalogButton, 1200,70); // top right button (mode)
+   
+   image (modeGraphButton, 1200, 120); // top right button (graph)
    
    noStroke();
    textFont(f,200);
    fill(0);
    
+   if (str(value).length() == 4){
+     textFont(f,170);
+   }
+   
    text(value,1020 + getDigitPos(value) ,330+30); // Actual text render
    
    textFont(f,50);// Needed text render
+   
+   if (str(neededValue).length() == 4){
+     textFont(f,42); 
+   }
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
    text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
 }
 
-float workOutPos(float min, float max, int current){
+float workOutPos(int min, int max, int current){
   // Returns the position of the arrow on analog face
-  return ((maxAngle - minAngle)/(max-min))*current+0.8;
+  return ((maxAngle - minAngle)/(max-min))*(current-min)+0.8;
 }
 
 boolean mouseOverRect(int x, int y, int w, int h) {
@@ -358,7 +572,7 @@ int getDigitPos(int value){
   }else if (str(value).length() == 3){
     pos = -120;
   }else if (str(value).length() == 4){
-    pos = -180;
+    pos = -155;
   }
   
   return pos;
@@ -375,7 +589,7 @@ int getNeededPos(int value){
   }else if (str(value).length() == 3){
     pos = -34;
   }else if (str(value).length() == 4){
-    pos = -48;
+    pos = -40;
   }
   
   return pos;
