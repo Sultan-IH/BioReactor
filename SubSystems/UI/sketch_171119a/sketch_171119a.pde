@@ -1,4 +1,10 @@
-/// its touch friendly
+// Need to do settings file
+// add analog to temperature
+// play around with fonts
+// send value to MSP
+// add the type chnage in settings
+// make the needed value change with min and max range
+// make an error stating that you are out of range when you change stuff in settings
 
 import processing.serial.*;
 
@@ -14,7 +20,7 @@ PFont f;
 // 0 - Analog, 1 - Digital, 2 - Graph
 int stateRPM = 0;
 int statePH = 0;
-// 0 - Digital, 1 - Graph
+// 0 - Digital
 int stateTemp = 0;
 
 Boolean isSettingsPH = false;
@@ -33,11 +39,13 @@ Integer neededTemp = 30;
 int minPH = 3;
 int maxPH = 8;
 
-float minTemp = 25;
-float maxTemp = 35;
+int minTemp = 25;
+int maxTemp = 35;
+int modeTemp = 0;
 
 int minRPM = 0;
 int maxRPM = 1500;
+int modeRPM = 0;
 
 PImage modeSettingsButton;
 PImage modeBackButton;
@@ -50,8 +58,20 @@ PImage settingsUpButton;
 PImage settingsDownButton;
 
 Boolean isOn = true;
+
+PrintWriter output;
 void setup() {
+  /*if (fileExists("settings.txt") == false){
+    output = createWriter("settings.txt"); 
+  }*/
+  String filename = "settings.txt";
+
+  File fi = new File(dataPath(filename));
   
+  if (!fi.exists())
+  {
+    output = createWriter("settings.txt"); 
+  }
   size(1280, 720);
   
   modeSettingsButton = loadImage ("Picture8.png");
@@ -62,8 +82,6 @@ void setup() {
   modeDigitalButton.resize(0,40);
   modeAnalogButton = loadImage("Picture5.png");
   modeAnalogButton.resize(0,40);
-  modeGraphButton = loadImage ("Picture4.png");
-  modeGraphButton.resize(0,40);
   upButton = loadImage("Picture3.png");
   upButton.resize(0,80);
   downButton = loadImage("Picture2.png");
@@ -75,7 +93,7 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  myPort = new Serial(this, Serial.list()[0], 9600);
+  //myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
@@ -99,12 +117,19 @@ void draw(){
     drawDigitalTemp(currentTemp, neededTemp);
   //else if (stateTemp == 2){}
   }
+  if (isSettingsTemp){
+    drawSettingsTemp(minTemp, maxTemp, modeTemp);
+  }
   
   if (stateRPM == 0){ // Shows analog RPM
     drawAnalogRPM(currentRPM, neededRPM, minRPM, maxRPM);
   } else if (stateRPM == 1){
     drawDigitalRPM(currentRPM, neededRPM);
     //else if (stateRPM == 2){}
+  }
+  
+  if (isSettingsRPM){
+    drawSettingsRPM(minRPM,maxRPM, modeRPM);
   }
   
   
@@ -122,16 +147,17 @@ void mouseClicked(){
     }
   }
   
-  if (isSettingsPH){ // When pH settings are open
-    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
+  if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
       if (!isSettingsPH){
         isSettingsPH = true;
       }else{
         isSettingsPH = false;
       }
     }
+  
+  if (isSettingsPH){ // When pH settings are open
     
-    if (mouseOverRect(370,180,40,40)){
+    if (mouseOverRect(370,180,40,40)){ // minPH UP button
       if (minPH<13){
         if (minPH + 1 == maxPH){
           minPH +=1;
@@ -142,19 +168,19 @@ void mouseClicked(){
       }
     }
     
-    if (mouseOverRect(325,180,40,40)){
+    if (mouseOverRect(325,180,40,40)){ // minPH down button
       if (minPH > 0){
         minPH -= 1;
       }
     }
     
-    if (mouseOverRect(370,230,40,40)){
+    if (mouseOverRect(370,230,40,40)){ // maxPH up button
       if (maxPH <14){
         maxPH += 1;
       }
     }
     
-    if (mouseOverRect(325,230,40,40)){
+    if (mouseOverRect(325,230,40,40)){ // maxPH down button
       if (maxPH > 1){
         if (maxPH -1 == minPH){
           maxPH-=1;
@@ -164,20 +190,13 @@ void mouseClicked(){
         }
       }
     }
+    
   }else{ // When pH settings are closed
     if (mouseOverRect(360, 70, 40, 40)){ // pH state button
       if (statePH == 0){
         statePH = 1;
       }else{
         statePH = 0;
-      }
-    }
-    
-    if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
-      if (!isSettingsPH){
-        isSettingsPH = true;
-      }else{
-        isSettingsPH = false;
       }
     }
     
@@ -203,35 +222,126 @@ void mouseClicked(){
     }
   }
   
-  
-  
-  if (mouseOverRect(730,545,80,80)){ // Temp up button
-    if (neededTemp < maxTemp){
-      neededTemp +=1;
+  if (mouseOverRect(460, 70,40,40)){ // Settings button Temp
+    if (!isSettingsTemp){
+      isSettingsTemp = true;
+    }else{
+      isSettingsTemp = false;
     }
   }
   
-  if (mouseOverRect(470,545,80,80)){ // Temp down button
-    if (neededTemp > minTemp){
-      neededTemp -=1;
+  if (isSettingsTemp){ // when temp settings are open
+    if (mouseOverRect(370+420,180,40,40)){ // minPH UP button
+      if (minTemp<59){
+        if (minTemp + 1 == maxTemp){
+          minTemp +=1;
+          maxTemp +=1;
+        }else{
+          minTemp += 1;
+      }
+      }
+    }
+    
+    if (mouseOverRect(325+420,180,40,40)){ // minPH down button
+      if (minTemp > 0){
+        minTemp -= 1;
+      }
+    }
+    
+    if (mouseOverRect(370+420,230,40,40)){ // maxPH up button
+      if (maxTemp <60){
+        maxTemp += 1;
+      }
+    }
+    
+    if (mouseOverRect(325+420,230,40,40)){ // maxPH down button
+      if (maxTemp > 1){
+        if (maxTemp -1 == minTemp){
+          maxTemp-=1;
+          minTemp-=1;
+          
+        }else{
+          maxTemp-=1;
+        }
+      }
+    }
+  }else{ // when tesp settings are closed
+    if (mouseOverRect(730,545,80,80)){ // Temp up button
+      if (neededTemp < maxTemp){
+        neededTemp +=1;
+      }
+    }
+    
+    if (mouseOverRect(470,545,80,80)){ // Temp down button
+      if (neededTemp > minTemp){
+        neededTemp -=1;
+      }
     }
   }
   
-  if (mouseOverRect(1150,545,80,80)){ // RPM up button
-    if (neededRPM < maxRPM){
-      neededRPM +=100;
+    if (mouseOverRect(880,70,40,40)){ // pH settings button - back to main view
+      if (!isSettingsRPM){
+        isSettingsRPM = true;
+      }else{
+        isSettingsRPM = false;
+      }
     }
-  }
-  
-  if (mouseOverRect(890,545,80,80)){ // RMP down button
-    if (neededRPM > minRPM){
-      neededRPM -=100;
+    
+  if(isSettingsRPM){ // when RPM settings are open
+    if (mouseOverRect(370+840,180,40,40)){ // minRPM UP button
+      if (minRPM<1900){
+        if (minRPM + 100 == maxRPM){
+          minRPM +=100;
+          maxRPM +=100;
+        }else{
+          minRPM += 100;
+        }
+      }
     }
+    
+    if (mouseOverRect(325+840,180,40,40)){ // minRPM down button
+      if (minRPM > 0){
+        minRPM -= 100;
+      }
+    }
+    
+    if (mouseOverRect(370+840,230,40,40)){ // maxRPM up button
+      if (maxRPM <2000){
+        maxRPM += 100;
+      }
+    }
+    
+    if (mouseOverRect(325+840,230,40,40)){ // maxRPM down button
+      if (maxRPM > 100){
+        if (maxRPM - 100 == minRPM){
+          maxRPM -=100 ;
+          minRPM -=100 ;
+          
+        }else{
+          maxRPM -= 100;
+        }
+      }
+    }
+  }else{ // when RPM settings are closed
+    
+    if (mouseOverRect(1150,545,80,80)){ // RPM up button
+      if (neededRPM < maxRPM){
+        neededRPM +=100;
+      }
+    }
+    
+    if (mouseOverRect(890,545,80,80)){ // RMP down button
+      if (neededRPM > minRPM){
+        neededRPM -=100;
+      }
+    }
+    
   }
+   
 }
 
 void getValue(){
-  if (myPort.available() > 0){ // if the porst is empty
+  /*if (myPort.available() > 0){ // if the porst is empty
     String str = myPort.readStringUntil('b'); // Reads the serail value
     String str1 = str.substring(1,str.length()-1);
     println(str1);
@@ -247,23 +357,69 @@ void getValue(){
       currentTemp = 30;
       currentRPM = 1000;
     }
-  }
-}
-
-void updateGraphs(){
-  
+  }*/
+   // Test values
+      currentPH = 7;
+      currentTemp = 30;
+      currentRPM = 1000;
 }
 
 void getSettings(){
   
 }
 
-void pHSettings(){
+void drawSettingsRPM(int min, int max, int mode){
+  noStroke();
   
+  fill(#ECF0F1, 240);
+  rect(20+840,50,400,620);
+  
+  fill(#95A5A6, 230);
+  image(modeBackButton, 40+840, 70); // top left button (Back)
+  image(settingsUpButton, 370+840,180); // min up button
+  image(settingsDownButton, 325+840,180); // min down button
+  
+  rect(170+840, 178, 150, 45);
+  
+  image(settingsUpButton, 370+840,230); // max up button
+  image(settingsDownButton, 325+840,230); // max down button
+  
+  rect(170+840, 225, 150, 45);
+  
+  fill(0);
+  textFont(f, 40);
+  text("Range", 40+840, 170);
+  text("Min", 60+840, 215);
+  text(min, 170+840,215);
+  text("Max", 60+840, 260);
+  text(max, 170+840,260);
 }
 
-void tempSettings(){
+void drawSettingsTemp(int min, int max, int mode){
+  noStroke();
   
+  fill(#ECF0F1, 240);
+  rect(20+420,50,400,620);
+  
+  fill(#95A5A6, 230);
+  image(modeBackButton, 40+420, 70); // top left button (Back)
+  image(settingsUpButton, 370+420,180); // min up button
+  image(settingsDownButton, 325+420,180); // min down button
+  
+  rect(170+420, 178, 150, 45);
+  
+  image(settingsUpButton, 370+420,230); // max up button
+  image(settingsDownButton, 325+420,230); // max down button
+  
+  rect(170+420, 225, 150, 45);
+  
+  fill(0);
+  textFont(f, 40);
+  text("Range", 40+420, 170);
+  text("Min", 60+420, 215);
+  text(min, 170+420,215);
+  text("Max", 60+420, 260);
+  text(max, 170+420,260);
 }
 
 void drawSettingsPH(int min, int max){
@@ -274,13 +430,13 @@ void drawSettingsPH(int min, int max){
   
   fill(#95A5A6, 230);
   image(modeBackButton, 40, 70); // top left button (Back)
-  image(settingsUpButton, 370,180);
-  image(settingsDownButton, 325,180);
+  image(settingsUpButton, 370,180); // min up button
+  image(settingsDownButton, 325,180); // min down button
   
   rect(170, 178, 150, 45);
   
-  image(settingsUpButton, 370,230);
-  image(settingsDownButton, 325,230);
+  image(settingsUpButton, 370,230); // max up button
+  image(settingsDownButton, 325,230); // max down button
   
   rect(170, 225, 150, 45);
   
@@ -346,6 +502,10 @@ void drawAnalogPH(int value, int neededValue, int min, int max){
    
    text("pH", 190, 95);
    
+}
+
+void drawAnalogTemp(int value, int neededValue, int min, int max){
+  
 }
 
 void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
@@ -435,8 +595,6 @@ void drawDigitalPH(int value, int neededValue){
    
    image(modeAnalogButton, 360,70); // top right button (mode)
    
-   image (modeGraphButton, 360, 120); // top right button (graph)
-   
    // Shows the temp value
    textFont(f,200);
    fill(0);
@@ -477,8 +635,6 @@ void drawDigitalTemp(int value, int neededValue){// + 420
    
    
    image(modeAnalogButton, 780,70); // top right button (mode)
-   
-   image (modeGraphButton, 780, 120); // top right button (graph)
    
    // Shows the temp value
    textFont(f,200);
@@ -524,10 +680,7 @@ void drawDigitalRPM(int value, int neededValue){
    rect(880, 70, 40, 40, 7); // top left button (settings)
    image(modeSettingsButton, 880,70);
    
-   
    image(modeAnalogButton, 1200,70); // top right button (mode)
-   
-   image (modeGraphButton, 1200, 120); // top right button (graph)
    
    noStroke();
    textFont(f,200);
@@ -593,4 +746,15 @@ int getNeededPos(int value){
   }
   
   return pos;
+}
+
+boolean fileExists(String filename) {
+
+ File file = new File(filename);
+
+ if(!file.exists()){
+  return false;
+ }
+   
+ return true;
 }
