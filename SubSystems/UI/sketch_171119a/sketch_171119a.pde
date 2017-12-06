@@ -1,10 +1,12 @@
 // Need to do settings file
-// add analog to temperature
 // play around with fonts
 // send value to MSP
 // add the type chnage in settings
 // make the needed value change with min and max range
 // make an error stating that you are out of range when you change stuff in settings
+// add indication of min and max on digital view
+// play around with colours
+// add border to settings button
 
 import processing.serial.*;
 
@@ -17,11 +19,10 @@ float maxAngle = 2*PI-0.75;
 // Font for the text ###Have a look at other fonts###
 PFont f;
 
-// 0 - Analog, 1 - Digital, 2 - Graph
+// 0 - Analog, 1 - Digital
 int stateRPM = 0;
 int statePH = 0;
-// 0 - Digital
-int stateTemp = 0;
+int stateTemp = 1;
 
 Boolean isSettingsPH = false;
 Boolean isSettingsTemp = false;
@@ -114,9 +115,11 @@ void draw(){
   }
   
   if (stateTemp == 0){ // Shows digital Temperature
-    drawDigitalTemp(currentTemp, neededTemp);
-  //else if (stateTemp == 2){}
+    drawAnalogTemp(currentTemp, neededTemp, minTemp, maxTemp);
+  }else if (stateTemp == 1){
+    drawDigitalTemp(currentTemp, neededTemp, minTemp, maxTemp);
   }
+  
   if (isSettingsTemp){
     drawSettingsTemp(minTemp, maxTemp, modeTemp);
   }
@@ -276,6 +279,14 @@ void mouseClicked(){
       if (neededTemp > minTemp){
         neededTemp -=1;
       }
+    }
+    
+    if (mouseOverRect(1200-420,70,40,40)){
+      if (stateTemp == 0){
+      stateTemp = 1;
+    }else{
+      stateTemp = 0;
+    }
     }
   }
   
@@ -501,11 +512,69 @@ void drawAnalogPH(int value, int neededValue, int min, int max){
    text(neededValue,207 + getNeededPos(neededValue),597);
    
    text("pH", 190, 95);
+   translate(-15,15);
+   DailPosPH(min, max);
+   translate(15,-15);
    
 }
 
 void drawAnalogTemp(int value, int neededValue, int min, int max){
-  
+  noStroke();
+   
+   if (value == neededValue){// Pick the colour for the BG
+     fill(#28B463);
+   }else{
+     fill(#FF2D00);
+   }
+   
+   rect(860-420, 50, 400, 620); // Background for the section
+   
+   fill(#ECF0F1, 40); // Opaque layer
+   rect(860-420, 50, 400, 620); 
+   
+   fill(#95A5A6, 230);
+   ellipse(1060-420, 270+30, 380, 380); // Main face
+   
+   ellipse(1060-420, 580, 100, 100); // The required value Face
+   
+   image(upButton, 1150-420,545); // bottom right button (up)
+   
+   image(downButton, 890-420, 545); // bottom left button (down)
+   
+   rect(880-420, 70, 40, 40, 7); // top left button (settings)
+   image(modeSettingsButton, 880-420,70);
+   
+   image(modeDigitalButton, 1200-420,70); // top right button (mode)
+
+   // Create the Arc around the meter
+   noFill();
+   stroke(176);
+   strokeWeight(20);
+   strokeCap(SQUARE);
+   arc(1060-420, 270+30, 360, 360, PI-0.8, 2*PI+0.8);
+   
+   // Creates the arrow on the dial
+   noStroke();
+   fill(0);
+   translate(1060-420, 270+30);
+   rotate(workOutPos(min, max, value));
+   rect(0,0,10,190);
+   
+   rotate(-workOutPos(min, max, value));
+   translate(-1060+420,-270-30);
+   
+   textFont(f,50);// Needed text render
+   if (str(neededValue).length() == 4){
+     textFont(f,42); 
+   }
+   text(neededValue,1050 -420 + getNeededPos(neededValue),598);
+   
+   text("Temperature", 500, 95);
+   
+   text("°C", 610, 460);
+   translate(-15+420,15);
+   DailPosPH(min, max);
+   translate(15-420,-15);
 }
 
 void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
@@ -562,6 +631,11 @@ void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    text("Stirring", 985, 95);
    
    text("RPM", 1000, 460);
+   
+   text("°C", 610, 460);
+   translate(-20+840,5);
+   DailPosRPM(min, max);
+   translate(20-840,-5);
 
 }
 
@@ -607,7 +681,7 @@ void drawDigitalPH(int value, int neededValue){
    
 }
 
-void drawDigitalTemp(int value, int neededValue){// + 420
+void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -746,6 +820,126 @@ int getNeededPos(int value){
   }
   
   return pos;
+}
+
+void DailPosPH(int min, int max){
+  int r = 145;
+  int offsetX = 220;
+  int offsetY = 300;
+  int posX;
+  int posY;
+  float cAngle;
+  for (int i = 0; i <= max-min; i++){
+    posX = 0;
+    posY = 0;
+    cAngle = workOutPos(min, max, min+i);
+    if (cAngle > PI/2 && cAngle <= PI){
+      cAngle -= PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY -posY;
+      posX = offsetX - posX;
+    }else if (cAngle > PI && cAngle <= 3*PI/2){
+      cAngle -= PI;
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY = offsetY -posY;
+      posX = offsetX + posX;
+    }else if (cAngle > 3*PI/2){
+      cAngle -= 3*PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY +posY;
+      posX = offsetX + posX;
+    }else{
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY += offsetY;
+      posX = offsetX - posX;
+    }
+    textFont(f,40);
+    text(str(i+min),posX,posY);
+  }
+}
+
+void DailPosTemp(int min, int max){
+  int r = 145;
+  int offsetX = 220;
+  int offsetY = 300;
+  int posX;
+  int posY;
+  float cAngle;
+  for (int i = 0; i <= max-min; i++){
+    posX = 0;
+    posY = 0;
+    cAngle = workOutPos(min, max, min+i);
+    if (cAngle > PI/2 && cAngle <= PI){
+      cAngle -= PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY -posY;
+      posX = offsetX - posX;
+    }else if (cAngle > PI && cAngle <= 3*PI/2){
+      cAngle -= PI;
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY = offsetY -posY;
+      posX = offsetX + posX;
+    }else if (cAngle > 3*PI/2){
+      cAngle -= 3*PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY +posY;
+      posX = offsetX + posX;
+    }else{
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY += offsetY;
+      posX = offsetX - posX;
+    }
+    textFont(f,40);
+    text(str(i+min),posX,posY);
+  }
+}
+
+void DailPosRPM(int min, int max){
+  int r = 145;
+  int offsetX = 220;
+  int offsetY = 300;
+  int posX;
+  int posY;
+  float cAngle;
+  for (int i = 0; i <= (max-min)/100; i++){
+    posX = 0;
+    posY = 0;
+    cAngle = workOutPos(min, max, min+i*100);
+    if (cAngle > PI/2 && cAngle <= PI){
+      cAngle -= PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY -posY;
+      posX = offsetX - posX;
+    }else if (cAngle > PI && cAngle <= 3*PI/2){
+      cAngle -= PI;
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY = offsetY -posY;
+      posX = offsetX + posX;
+    }else if (cAngle > 3*PI/2){
+      cAngle -= 3*PI/2;
+      posY = round(sin(cAngle) * r);
+      posX = round(sqrt(sq(r)-sq(posY)));
+      posY = offsetY +posY;
+      posX = offsetX + posX;
+    }else{
+      posX = round(sin(cAngle) * r);
+      posY = round(sqrt(sq(r)-sq(posX)));
+      posY += offsetY;
+      posX = offsetX - posX;
+    }
+    textFont(f,25);
+    text(str(100*i+min),posX,posY);
+  }
 }
 
 boolean fileExists(String filename) {
