@@ -9,6 +9,7 @@
 // add border to settings button
 
 import processing.serial.*;
+import http.requests.*;
 
 Serial myPort;// The serial port from which the data will be recieved
 
@@ -951,4 +952,12 @@ boolean fileExists(String filename) {
  }
    
  return true;
+}
+
+void PostData () {
+  PostRequest post = new PostRequest("http://engs101-test.azurewebsites.net/");
+  post.addData("temp", Integer.toString(currentTemp));
+  post.addData("ph", Integer.toString(currentPH));
+  post.addData("rpm", Integer.toString(currentRPM));
+  post.send();
 }
