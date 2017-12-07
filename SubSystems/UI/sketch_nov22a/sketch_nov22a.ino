@@ -1,6 +1,6 @@
-int ph = 0;
+int ph = 5;
 int temp = 25;
-int rpm = 0;
+int rpm = 1000;
 char in;
 
 void setup() {
@@ -11,8 +11,6 @@ void setup() {
 
 void loop() {
   // put your main code here, to run repeatedly:
-  Serial.print(String(ph) + "," + String(temp) + "," + String(rpm) + "b");
-  Serial.print("\n");
-  in = Serial.read();
+  Serial.print(String(ph) + ";" + String(temp) + ";" + String(rpm) + ";\n");
   delay(100);
 }
