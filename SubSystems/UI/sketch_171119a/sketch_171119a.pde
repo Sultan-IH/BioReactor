@@ -1,10 +1,9 @@
 // Need to do settings file
 // play around with fonts
-// send value to MSP
+// send value to MSP --------
 // add the type chnage in settings
 // make the needed value change with min and max range
 // make an error stating that you are out of range when you change stuff in settings
-// add indication of min and max on digital view
 // play around with colours
 // add border to settings button
 
@@ -94,7 +93,7 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  //myPort = new Serial(this, Serial.list()[0], 9600);
+  myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
@@ -106,7 +105,7 @@ void draw(){
     drawAnalogPH(currentPH, neededPH, minPH, maxPH);
   }
   else if ( statePH == 1){
-    drawDigitalPH(currentPH, neededPH);
+    drawDigitalPH(currentPH, neededPH, minPH, maxPH);
    //else if (statePH == 2){ }
   }
   
@@ -127,7 +126,7 @@ void draw(){
   if (stateRPM == 0){ // Shows analog RPM
     drawAnalogRPM(currentRPM, neededRPM, minRPM, maxRPM);
   } else if (stateRPM == 1){
-    drawDigitalRPM(currentRPM, neededRPM);
+    drawDigitalRPM(currentRPM, neededRPM, minRPM, maxRPM);
     //else if (stateRPM == 2){}
   }
   
@@ -135,8 +134,9 @@ void draw(){
     drawSettingsRPM(minRPM,maxRPM, modeRPM);
   }
   
+  //myPort.write(str(neededPH) + "," + str(neededTemp) + "," + str(neededRPM)+"b");
   
-  delay(100); ///////////////// Try to make it work without the delay ////////////////
+  delay(100);
   
 }
 
@@ -206,6 +206,7 @@ void mouseClicked(){
     if (mouseOverRect(310,545,80,80)){ // pH up button
       if (neededPH < maxPH){
         neededPH +=1;
+        
       }
     }
     
@@ -352,7 +353,7 @@ void mouseClicked(){
 }
 
 void getValue(){
-  /*if (myPort.available() > 0){ // if the porst is empty
+  if (myPort.available() > 0){ // if the porst is empty
     String str = myPort.readStringUntil('b'); // Reads the serail value
     String str1 = str.substring(1,str.length()-1);
     println(str1);
@@ -362,17 +363,17 @@ void getValue(){
       currentPH = nums[0];
       currentTemp = nums[1];
       currentRPM = nums[2];
-      
-      // Test values
-      currentPH = 7;
-      currentTemp = 30;
-      currentRPM = 1000;
+
     }
-  }*/
+  }
+  if (myPort.available() > 0){
+          myPort.write(str(neededPH) + "," + str(neededTemp) + "," + str(neededRPM) + "b");
+          println("Done uploading");
+        }
    // Test values
-      currentPH = 7;
+      /*currentPH = 7;
       currentTemp = 30;
-      currentRPM = 1000;
+      currentRPM = 1000;*/
 }
 
 void getSettings(){
@@ -564,14 +565,14 @@ void drawAnalogTemp(int value, int neededValue, int min, int max){
    translate(-1060+420,-270-30);
    
    textFont(f,50);// Needed text render
+   text("Temperature", 500, 95);
+   
+   text("°C", 610, 460);
    if (str(neededValue).length() == 4){
      textFont(f,42); 
    }
    text(neededValue,1050 -420 + getNeededPos(neededValue),598);
    
-   text("Temperature", 500, 95);
-   
-   text("°C", 610, 460);
    translate(-15+420,15);
    DailPosPH(min, max);
    translate(15-420,-15);
@@ -623,23 +624,21 @@ void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    translate(-1060,-270-30);
    
    textFont(f,50);// Needed text render
+   text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
    if (str(neededValue).length() == 4){
      textFont(f,42); 
    }
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
-   text("Stirring", 985, 95);
-   
-   text("RPM", 1000, 460);
-   
-   text("°C", 610, 460);
    translate(-20+840,5);
    DailPosRPM(min, max);
    translate(20-840,-5);
 
 }
 
-void drawDigitalPH(int value, int neededValue){
+void drawDigitalPH(int value, int neededValue, int min, int max){
    
    noStroke();
    
@@ -679,6 +678,9 @@ void drawDigitalPH(int value, int neededValue){
    
    text("pH", 190, 95);
    
+   text(min, 480-420,520);
+   text(max, 740 - 420,520);
+   
 }
 
 void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
@@ -700,6 +702,7 @@ void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    
    ellipse(640, 580, 100, 100); // The required value Face
    
+
    image(upButton, 730, 545); // bottom right button (up)
    
    image(downButton, 470, 545); // bottom left button (down)
@@ -717,6 +720,8 @@ void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    
    textFont(f,50);
    text(neededValue,630 + getNeededPos(neededValue),598); // needed text render
+   text(min, 480,520);
+   text(max, 740,520);
    
    text("Temperature", 500, 95);
    
@@ -724,11 +729,8 @@ void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    
 }
 
-void drawDigitalRPM(int value, int neededValue){
+void drawDigitalRPM(int value, int neededValue, int min, int max){
   // Minimum and maximum values of the sensor
-   float min = 0;
-   float max = 1500;
-   
    noStroke();
    
    if (value == neededValue){// Pick the colour for the BG
@@ -755,10 +757,12 @@ void drawDigitalRPM(int value, int neededValue){
    image(modeSettingsButton, 880,70);
    
    image(modeAnalogButton, 1200,70); // top right button (mode)
-   
+   fill(0);
+   text(min, 480+420,520);
+   text(max, 740 + 420,520);
    noStroke();
    textFont(f,200);
-   fill(0);
+
    
    if (str(value).length() == 4){
      textFont(f,170);
@@ -767,15 +771,16 @@ void drawDigitalRPM(int value, int neededValue){
    text(value,1020 + getDigitPos(value) ,330+30); // Actual text render
    
    textFont(f,50);// Needed text render
+   text("Stirring", 985, 95);
+   
+   text("RPM", 1000, 460);
    
    if (str(neededValue).length() == 4){
      textFont(f,42); 
    }
    text(neededValue,1050 + getNeededPos(neededValue),598);
    
-   text("Stirring", 985, 95);
    
-   text("RPM", 1000, 460);
 }
 
 float workOutPos(int min, int max, int current){
