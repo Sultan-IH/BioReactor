@@ -9,16 +9,16 @@
 
 
 float TempToHold = 25.0;
-float OptimalPh = 5.0;
+float OptimalPh = 5.5;
 short PWM = 0;
-short AcidValue = 0;
-short BaseValue = 0;
 
 
 void setup()
 {
   // put your setup code here, to run once:
   analogReference(DEFAULT);
+  pinMode(9,OUTPUT);
+  pinMode(10,OUTPUT);
   Serial.begin(9600);
   
   
@@ -54,18 +54,17 @@ void AdjustpH(float pH){
   float difference = OptimalPh - pH;
   Serial.println("_____");
   if (difference > 1){
-    AcidValue = (short)((difference/3)*160)+95; 
-    BaseValue = 0;
-  }else if ( difference < 1){
-    BaseValue = (short)((difference/3)*160)+95;
-    AcidValue = 0;
+    digitalWrite(10,HIGH);//PUMP acid
+    digitalWrite(9,LOW);;
+  }else if ( difference < -1){
+    digitalWrite(10,LOW);
+    digitalWrite(9,HIGH);//PUMP base
   }else{
-    AcidValue =0;
-    BaseValue = 0;
+    //Turn off pumping
+    digitalWrite(10,LOW);
+    digitalWrite(9,LOW);
   }
-  analogWrite(AcidValue,9);
-  analogWrite(BaseValue,10);
-  }
+}
 //Self explainatory*
 
 
