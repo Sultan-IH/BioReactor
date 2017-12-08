@@ -131,7 +131,7 @@ void draw(){
     drawSettingsRPM(minRPM,maxRPM, modeRPM);
   }
   
-  myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM)+";\n");
+  myPort.write(str(neededTemp) + ";" + str(neededPH) + ";" + str(neededRPM)+";\n");
   
   delay(100);
   
@@ -357,8 +357,8 @@ void getValue(){
     int[] nums = int(split(str1, ';'));
     
     if(nums.length == 3){
-      currentPH = nums[0];
-      currentTemp = nums[1];
+      currentPH = nums[1];
+      currentTemp = nums[0];
       currentRPM = nums[2];
 
     }
