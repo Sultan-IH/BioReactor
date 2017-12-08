@@ -1,11 +1,8 @@
 // Need to do settings file
 // play around with fonts
-// send value to MSP --------
 // add the type chnage in settings
 // make the needed value change with min and max range
 // make an error stating that you are out of range when you change stuff in settings
-// play around with colours
-// add border to settings button
 
 import processing.serial.*;
 import http.requests.*;
@@ -75,7 +72,7 @@ void setup() {
   }
   size(1280, 720);
   
-  modeSettingsButton = loadImage ("Picture8.png");
+  modeSettingsButton = loadImage ("Picture10.png");
   modeSettingsButton.resize(0,40);
   modeBackButton = loadImage ("Picture9.png");
   modeBackButton.resize(0,40);
@@ -94,11 +91,11 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  myPort = new Serial(this, Serial.list()[0], 9600);
+  myPort = new Serial(this, Serial.list()[1], 9600);
 }
 
 void draw(){
-  background(#F5D76E);
+  background(#e0dab1);
   
   getValue();
   
@@ -107,7 +104,6 @@ void draw(){
   }
   else if ( statePH == 1){
     drawDigitalPH(currentPH, neededPH, minPH, maxPH);
-   //else if (statePH == 2){ }
   }
   
   if (isSettingsPH){
@@ -135,7 +131,7 @@ void draw(){
     drawSettingsRPM(minRPM,maxRPM, modeRPM);
   }
   
-  //myPort.write(str(neededPH) + "," + str(neededTemp) + "," + str(neededRPM)+"b");
+  myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM)+";\n");
   
   delay(100);
   
@@ -355,10 +351,10 @@ void mouseClicked(){
 
 void getValue(){
   if (myPort.available() > 0){ // if the porst is empty
-    String str = myPort.readStringUntil('b'); // Reads the serail value
-    String str1 = str.substring(1,str.length()-1);
+    String str = myPort.readStringUntil('\n'); // Reads the serail value
+    String str1 = str.substring(0,str.length()-2);
     println(str1);
-    int[] nums = int(split(str1, ','));
+    int[] nums = int(split(str1, ';'));
     
     if(nums.length == 3){
       currentPH = nums[0];
@@ -368,7 +364,7 @@ void getValue(){
     }
   }
   if (myPort.available() > 0){
-          myPort.write(str(neededPH) + "," + str(neededTemp) + "," + str(neededRPM) + "b");
+          myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM) + ";\n");
           println("Done uploading");
         }
    // Test values
@@ -487,14 +483,13 @@ void drawAnalogPH(int value, int neededValue, int min, int max){
    
    image(downButton,50, 545); // bottom left button (down)
    
-   rect(40, 70, 40, 40, 7); // top left button (Settings)
    image(modeSettingsButton, 40,70);
    
    image(modeDigitalButton, 360,70); // top right button (mode)
    
    // Create the Arc around the meter
    noFill();
-   stroke(176);
+   stroke(120);
    strokeWeight(20);
    strokeCap(SQUARE);
    arc(220, 270+30, 360, 360, PI-0.8, 2*PI+0.8);
@@ -542,15 +537,14 @@ void drawAnalogTemp(int value, int neededValue, int min, int max){
    image(upButton, 1150-420,545); // bottom right button (up)
    
    image(downButton, 890-420, 545); // bottom left button (down)
-   
-   rect(880-420, 70, 40, 40, 7); // top left button (settings)
+
    image(modeSettingsButton, 880-420,70);
    
    image(modeDigitalButton, 1200-420,70); // top right button (mode)
 
    // Create the Arc around the meter
    noFill();
-   stroke(176);
+   stroke(120);
    strokeWeight(20);
    strokeCap(SQUARE);
    arc(1060-420, 270+30, 360, 360, PI-0.8, 2*PI+0.8);
@@ -575,7 +569,7 @@ void drawAnalogTemp(int value, int neededValue, int min, int max){
    text(neededValue,1050 -420 + getNeededPos(neededValue),598);
    
    translate(-15+420,15);
-   DailPosPH(min, max);
+   DailPosTemp(min, max);
    translate(15-420,-15);
 }
 
@@ -602,14 +596,13 @@ void drawAnalogRPM(int value, int neededValue, int min, int max){//+840
    
    image(downButton, 890, 545); // bottom left button (down)
    
-   rect(880, 70, 40, 40, 7); // top left button (settings)
    image(modeSettingsButton, 880,70);
    
    image(modeDigitalButton, 1200,70); // top right button (mode)
 
    // Create the Arc around the meter
    noFill();
-   stroke(176);
+   stroke(120);
    strokeWeight(20);
    strokeCap(SQUARE);
    arc(1060, 270+30, 360, 360, PI-0.8, 2*PI+0.8);
@@ -662,8 +655,7 @@ void drawDigitalPH(int value, int neededValue, int min, int max){
    image(upButton,310,545); // bottom right button (up)
    
    image(downButton,50, 545); // bottom left button (down)
-   
-   rect(40, 70, 40, 40, 7); // top left button (Settings)
+
    image(modeSettingsButton, 40,70);
    
    
@@ -707,8 +699,7 @@ void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    image(upButton, 730, 545); // bottom right button (up)
    
    image(downButton, 470, 545); // bottom left button (down)
-   
-   rect(460, 70, 40, 40, 7); // top left button (settings)
+
    image(modeSettingsButton, 460,70);
    
    
@@ -753,8 +744,7 @@ void drawDigitalRPM(int value, int neededValue, int min, int max){
    image(upButton, 1150,545); // bottom right button (up)
    
    image(downButton, 890, 545); // bottom left button (down)
-   
-   rect(880, 70, 40, 40, 7); // top left button (settings)
+
    image(modeSettingsButton, 880,70);
    
    image(modeAnalogButton, 1200,70); // top right button (mode)
@@ -875,7 +865,17 @@ void DailPosTemp(int min, int max){
   int posX;
   int posY;
   float cAngle;
-  for (int i = 0; i <= max-min; i++){
+  int a = 1;
+  if (max-min >27 && (max-min + 1)%2==0){
+    a = 3;
+  }else if  (max-min >27 && (max-min + 1)%2!=0){
+    a = 3;
+  }else if  (max-min >13 && (max-min + 1)%2==0){
+    a = 2;
+  }else if  (max-min >13 && (max-min + 1)%2!=0){
+    a = 2;
+  }
+  for (int i = 0; i <= max-min; i += a){
     posX = 0;
     posY = 0;
     cAngle = workOutPos(min, max, min+i);
@@ -906,6 +906,7 @@ void DailPosTemp(int min, int max){
     textFont(f,40);
     text(str(i+min),posX,posY);
   }
+  text(str(max), 319,406);
 }
 
 void DailPosRPM(int min, int max){
