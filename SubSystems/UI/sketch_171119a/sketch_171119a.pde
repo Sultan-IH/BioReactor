@@ -1,6 +1,4 @@
-// Need to do settings file
 // play around with fonts
-// add the type chnage in settings
 // make the needed value change with min and max range
 // make an error stating that you are out of range when you change stuff in settings
 
@@ -55,21 +53,8 @@ PImage downButton;
 PImage settingsUpButton;
 PImage settingsDownButton;
 
-Boolean isOn = true;
-
-PrintWriter output;
 void setup() {
-  /*if (fileExists("settings.txt") == false){
-    output = createWriter("settings.txt"); 
-  }*/
-  String filename = "settings.txt";
 
-  File fi = new File(dataPath(filename));
-  
-  if (!fi.exists())
-  {
-    output = createWriter("settings.txt"); 
-  }
   size(1280, 720);
   
   modeSettingsButton = loadImage ("Picture10.png");
@@ -138,14 +123,6 @@ void draw(){
 }
 
 void mouseClicked(){
-  
-  if (mouseOverRect(0,0,0,0)){ // On/Off button
-    if (isOn){
-      isOn = false;
-    }else{
-      isOn = true;
-    }
-  }
   
   if (mouseOverRect(40,70,40,40)){ // pH settings button - not settings
       if (!isSettingsPH){
@@ -354,12 +331,13 @@ void getValue(){
     String str = myPort.readStringUntil('\n'); // Reads the serail value
     String str1 = str.substring(0,str.length()-2);
     println(str1);
-    int[] nums = int(split(str1, ';'));
+    float[] nums = float(split(str1, ';'));
     
     if(nums.length == 3){
-      currentPH = nums[1];
-      currentTemp = nums[0];
-      currentRPM = nums[2];
+      currentPH = int(nums[1]);
+      currentTemp = int(nums[0]);
+      currentRPM = int(nums[2]);
+      println(nums);
 
     }
   }
@@ -708,7 +686,7 @@ void drawDigitalTemp(int value, int neededValue, int min, int max){// + 420
    // Shows the temp value
    textFont(f,200);
    fill(0);
-   text(value,605 + getDigitPos(value) ,330+30); // actual text render
+   text(value,590 + getDigitPos(value) ,330+30); // actual text render
    
    textFont(f,50);
    text(neededValue,630 + getNeededPos(neededValue),598); // needed text render
@@ -791,7 +769,7 @@ int getDigitPos(int value){
   if ( str(value).length() == 1){
     pos = 0;
   }else if (str(value).length() == 2){
-    pos = -70;
+    pos = -60;
   }else if (str(value).length() == 3){
     pos = -120;
   }else if (str(value).length() == 4){
