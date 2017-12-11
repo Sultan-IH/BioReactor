@@ -1,165 +1,54 @@
 #include <math.h>
-#include <msp430.h>
-
-//Definitions and global varaibles
-#define THERMISTORNOMINAL 8150
-#define BCOEFFICIENT 4220
-#define SERIESRESISTOR 10000
-
-//Thermal
-float TempToHold = 25.0;
-float CurrentTemp = 20;
-//pH
-float OptimalpH = 5.5;
-float CurrentpH = 5.5;
-//UI
-//short CycleTracker = 0;
-//Stiring
-unsigned long t; //time variables
-short stateOfSensor = 0;
-short previousState = 0;
-short CurrentRPM = 0;
-short IdealRPM = 55;
-short MotorPWM = 255;
-//Definitions and global varaibles*
-
-void setup(){
-  // put your setup code here, to run once:
-  analogReference(DEFAULT);
-  pinMode(9,OUTPUT);
-  pinMode(10,OUTPUT);
-  Serial.begin(9600);
-}
-
-//Self explainatory
-void AdjustTemp(){
-  CurrentTemp = (((float)analogRead(2)-548.0)/-3.2);
-  if (CurrentTemp > 20){
-    CurrentTemp = SERIESRESISTOR/(1023/(float)analogRead(2)-1);
-    CurrentTemp = 1/(logf(CurrentTemp/THERMISTORNOMINAL)/BCOEFFICIENT + 0.003354016435);
-    CurrentTemp -= 273.15;
-  }
-  if ( (TempToHold-CurrentTemp) > 0.5 ){
-    if ( ((((TempToHold-CurrentTemp)/15)*255)+110)>254){
-      analogWrite(14,255);
-    }else{
-      analogWrite(14,((int)(((TempToHold-CurrentTemp)/15)*255)+110));
-    }
-  }else if ((TempToHold-CurrentTemp) < 0.5){
-    analogWrite(14,0);
-  }
-}
+const int thermistorInputPin = P1_0 ;
+const int heaterOutputPin = P1_2;
 
 
-void AdjustpH(){
-  CurrentpH = (((float)analogRead(2)/1024 * 3.55)*-13.5)+17.855;
-  if ((OptimalpH - CurrentpH) > 1){
-    digitalWrite(10,HIGH);//PUMP acid
-    digitalWrite(9,LOW);;
-  }else if ( (OptimalpH - CurrentpH) < -1){
-    digitalWrite(10,LOW);
-    digitalWrite(9,HIGH);//PUMP base
-  }else{
-    //Turn off pumping
-    digitalWrite(10,LOW);
-    digitalWrite(9,LOW);
-  }
-}
+float temperature = 0;
+float T_LB = 25.0;
+float T_UB = 35.0;
+float getTemperature(int pinNumber);
 
-void adjustRPM(){
-    //short hits = 0;
-    while (true){
-      stateOfSensor = digitalRead(1);
-      if ((previousState == 0)&&(stateOfSensor == 1)) { //check for rising edge
-        CurrentRPM = (short)(1000000 * 60 / (micros() - t)); //print the rpm
-        t = micros(); 
-        break;
-      }
-      previousState = stateOfSensor;
-      //Make sure rpm not slower than 10 (i.e waiting too loong)
-      if ((micros() - t)> 6000000){
-        CurrentRPM = 0;//may as well be
-        t = micros();
-        break;
-      }
-      //Make sure rpm not slower than 10 (i.e waiting too loong)
-    }
-    if ( (IdealRPM - CurrentRPM) > 5){
-      MotorPWM +=10;
-      if (MotorPWM > 255){
-        MotorPWM = 255;
-      }
-      analogWrite(1,MotorPWM);
-    }else if ((IdealRPM - CurrentRPM) < -5){
-      MotorPWM -=1;
-      if (MotorPWM < 0){
-        MotorPWM = 0;
-      }
-      analogWrite(1,MotorPWM);
-    }
-  }
 
-short getDecimal(float val)
+void setup()
 {
-  short decPart = 1000*(val-int(val)); //multiply by 1000 assuming that values will have a maximum of 3 decimal places. 
-  if(decPart>0)return(decPart);           //return the decimal part of float number if it is available 
-  else if(decPart<0)return((-1)*decPart); //if negative, multiply by -1
-  else if(decPart=0)return(00);           //return 0 if decimal part of float number is not available
+  Serial.begin(9600); 
+
+  // Heating
+  pinMode(heaterOutputPin, OUTPUT); 
+
 }
-
-
-//Self explainatory*
-
-
 
 void loop()
 {
-  // put your main code here, to run repeatedly:
-  //CycleTracker += 1;
-  //Measure and adjust params
-  adjustRPM();
-  AdjustTemp();
-  AdjustpH();
-  //Measure and adjust params
-  //Update UI and look for input from UI
-  //if (CycleTracker == 1){
-    //Check input
-    String Input="";
-    short InputIndex = 0;
-    while (Serial.available() > 0) {
-      char ch = Serial.read();
-      if (ch == '\n'){
-        //End of input
-        InputIndex = 0;
-        Input = "";
-        //End of input 
-      }else{
-        if (ch == ';'){
-          switch (InputIndex) {
-            case 0:
-              TempToHold = Input.toFloat();
-              break;
-            case 1:
-              OptimalpH = Input.toFloat();
-              break;
-            case 2:
-              IdealRPM = (short)Input.toFloat();
-              break;
-          }
-          Input = "";
-          InputIndex +=1;
-        }else{
-          Input += ch;
-        }
-      }
-   }
-   //Check input
-   
-   //Send Data
-   Serial.print(String(int(CurrentTemp))+'.'+String(getDecimal(CurrentTemp))+';'+String(int(CurrentpH))+ '.'+String(getDecimal(CurrentpH))+';'+String(MotorPWM)+';'+'\n');
-   //Send Data
-   //CycleTracker = 0;
-  //}
-  //Update UI and look for input from UI*
-  
+  //Temperature code:
+  temperature = getTemperature(thermistorInputPin);
+
+  if(temperature <= T_LB+2)
+  {
+    digitalWrite(heaterOutputPin, HIGH); //turn heater on
+  }
+  else if(temperature >= T_UB-4)
+  {
+    digitalWrite(heaterOutputPin, LOW); //turn heater off
+  }
+
+ Serial.println(temperature); 
+}
+
+float getTemperature(int pinNumber)
+{
+  float temperature = 0;
+  float thermistorResistence = 0;
+  const float RESISTOR = 10000.0; //10,000 ohm resistor being used in series with thermistor
+  const float MAX_ADC = 1023.0;
+  const float BETA = 4220.0; //taken from thermistor data sheet
+  const float ROOM_TEMP = 298.15; //in kelvin
+  const float THERMISTOR_ROOM_TEMP = 10000.0; //resistence of the thermistor at 25 degrees Celcius
+
+  float rawADC = analogRead(pinNumber); //read p.d. across resistor
+  thermistorResistence = RESISTOR * ( (MAX_ADC / rawADC) - 1); //calculate resistence of thermistor from p.d. read previously 
+  //calculate temperature using equation 1/t = 1/T + (1/BETA) * ln(r/R), where t is temperature, T is 25 degrees Celcius, 
+  //BETA is a constant specific to the thermistor, r is resistence of the thermistor, and R is resistence of the thermistor at 25 degrees Celcius.
+  temperature = (BETA * ROOM_TEMP) / (BETA + (ROOM_TEMP * logf(thermistorResistence / THERMISTOR_ROOM_TEMP)));
+  return temperature - 273.15; //convert from kelvin to degrees Celcius
 }
