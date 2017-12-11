@@ -51,7 +51,7 @@ PImage downButton;
 PImage settingsUpButton;
 PImage settingsDownButton;
 
-int[] arpm;
+int arpm[] = new int[5];
 
 void setup() {
 
