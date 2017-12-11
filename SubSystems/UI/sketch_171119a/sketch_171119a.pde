@@ -3,8 +3,6 @@
 // make an error stating that you are out of range when you change stuff in settings
 
 import processing.serial.*;
-import http.requests.*;
-
 Serial myPort;// The serial port from which the data will be recieved
 
 // minimum and maximum angles for analog view
@@ -76,7 +74,7 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  myPort = new Serial(this, Serial.list()[1], 9600);
+  //myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
@@ -116,7 +114,7 @@ void draw(){
     drawSettingsRPM(minRPM,maxRPM, modeRPM);
   }
   
-  myPort.write(str(neededTemp) + ";" + str(neededPH) + ";" + str(neededRPM)+";\n");
+  //myPort.write(str(neededTemp) + ";" + str(neededPH) + ";" + str(neededRPM)+";\n");
   
   delay(100);
   
@@ -329,31 +327,30 @@ void mouseClicked(){
 void getValue(){
   if (myPort.available() > 0){ // if the porst is empty
     String str = myPort.readStringUntil('\n'); // Reads the serail value
-    String str1 = str.substring(0,str.length()-2);
-    println(str1);
-    float[] nums = float(split(str1, ';'));
-    
-    if(nums.length == 3){
-      currentPH = int(nums[1]);
-      currentTemp = int(nums[0]);
-      currentRPM = int(nums[2]);
-      println(nums);
-
-    }
-  }
-  if (myPort.available() > 0){
-          myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM) + ";\n");
-          println("Done uploading");
-        }
-   // Test values
-      /*currentPH = 7;
-      currentTemp = 30;
-      currentRPM = 1000;*/
-}
-
-void getSettings(){
+    if (str != null){
+      String str1 = str.substring(0,str.length()-2);
+      println(str1);
+      float[] nums = float(split(str1, ';'));
+      
+      if(nums.length == 3){
+        currentPH = int(nums[1]);
+        currentTemp = int(nums[0]);
+        currentRPM = int(nums[2]);
+        println(nums);
   
+      }
+    }
+    if (myPort.available() > 0){
+            myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM) + ";\n");
+            println("Done uploading");
+          }
+     // Test values
+        /*currentPH = 7;
+        currentTemp = 30;
+        currentRPM = 1000;*/
+  }
 }
+
 
 void drawSettingsRPM(int min, int max, int mode){
   noStroke();
@@ -844,13 +841,11 @@ void DailPosTemp(int min, int max){
   int posY;
   float cAngle;
   int a = 1;
-  if (max-min >27 && (max-min + 1)%2==0){
+  if(max-min > 39 ){
+    a = 4;
+  }else if (max-min >27){
     a = 3;
-  }else if  (max-min >27 && (max-min + 1)%2!=0){
-    a = 3;
-  }else if  (max-min >13 && (max-min + 1)%2==0){
-    a = 2;
-  }else if  (max-min >13 && (max-min + 1)%2!=0){
+  }else if  (max-min >13){
     a = 2;
   }
   for (int i = 0; i <= max-min; i += a){
@@ -889,12 +884,20 @@ void DailPosTemp(int min, int max){
 
 void DailPosRPM(int min, int max){
   int r = 145;
-  int offsetX = 220;
+  int offsetX = 215;
   int offsetY = 300;
   int posX;
   int posY;
   float cAngle;
-  for (int i = 0; i <= (max-min)/100; i++){
+  int a = 1;
+  if((max-min)/100 > 39 ){
+    a = 4;
+  }else if ((max-min)/100 >27){
+    a = 3;
+  }else if  ((max-min)/100 >13){
+    a = 2;
+  }
+  for (int i = 0; i <= (max-min)/100; i+=a){
     posX = 0;
     posY = 0;
     cAngle = workOutPos(min, max, min+i*100);
@@ -925,23 +928,5 @@ void DailPosRPM(int min, int max){
     textFont(f,25);
     text(str(100*i+min),posX,posY);
   }
-}
-
-boolean fileExists(String filename) {
-
- File file = new File(filename);
-
- if(!file.exists()){
-  return false;
- }
-   
- return true;
-}
-
-void PostData () {
-  PostRequest post = new PostRequest("http://engs101-test.azurewebsites.net/");
-  post.addData("temp", Integer.toString(currentTemp));
-  post.addData("ph", Integer.toString(currentPH));
-  post.addData("rpm", Integer.toString(currentRPM));
-  post.send();
+  text(str(max), 319,406);
 }
