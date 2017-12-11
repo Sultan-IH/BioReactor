@@ -354,7 +354,9 @@ void getValue(){
       if(nums.length == 3){
         currentPH = int(nums[1]);
         currentTemp = int(nums[0]);
-        currentRPM = averageRPM(int(nums[2]));
+        if ((str(nums[2])).length() > 0){
+          currentRPM = averageRPM(int(nums[2]));
+        }
         println(nums);
   
       }
