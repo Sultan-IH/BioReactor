@@ -360,7 +360,7 @@ void getValue(){
       }
     }
     if (myPort.available() > 0){
-            myPort.write(str(neededPH) + ";" + str(neededTemp) + ";" + str(neededRPM) + ";\n");
+            myPort.write(str(neededTemp) + ";" + str(neededPH) + ";" + str(neededRPM) + ";\n");
             println("Done uploading");
           }
      // Test values
