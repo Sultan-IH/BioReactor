@@ -33,12 +33,12 @@ Integer neededTemp = 30;
 int minPH = 3;
 int maxPH = 8;
 
-int minTemp = 25;
+int minTemp = 20;
 int maxTemp = 35;
 int modeTemp = 0;
 
-int minRPM = 0;
-int maxRPM = 1500;
+int minRPM = 500;
+int maxRPM = 3000;
 int modeRPM = 0;
 
 PImage modeSettingsButton;
@@ -50,6 +50,8 @@ PImage upButton;
 PImage downButton;
 PImage settingsUpButton;
 PImage settingsDownButton;
+
+int[] arpm;
 
 void setup() {
 
@@ -74,7 +76,7 @@ void setup() {
   
   
   f = createFont("Arial",16,true);
-  //myPort = new Serial(this, Serial.list()[0], 9600);
+  myPort = new Serial(this, Serial.list()[0], 9600);
 }
 
 void draw(){
@@ -324,6 +326,23 @@ void mouseClicked(){
    
 }
 
+int averageRPM(int newRPM){
+  int rpm;
+  rpm = 0;
+  arpm = append(arpm, newRPM);
+  if (arpm.length > 5){
+    arpm = subset(arpm, 1); 
+  }
+  if (arpm.length == 5){
+    int a = 0;
+    for (int i = 0; i < arpm.length; i++){
+      a+= arpm[i];
+      rpm = int(a/arpm.length);
+    }
+  }
+  return rpm;
+}
+
 void getValue(){
   if (myPort.available() > 0){ // if the porst is empty
     String str = myPort.readStringUntil('\n'); // Reads the serail value
@@ -335,7 +354,7 @@ void getValue(){
       if(nums.length == 3){
         currentPH = int(nums[1]);
         currentTemp = int(nums[0]);
-        currentRPM = int(nums[2]);
+        currentRPM = averageRPM(int(nums[2]));
         println(nums);
   
       }
