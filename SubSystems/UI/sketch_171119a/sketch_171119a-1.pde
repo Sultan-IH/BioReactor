@@ -51,7 +51,7 @@ PImage downButton;
 PImage settingsUpButton;
 PImage settingsDownButton;
 
-int[] arpm;
+int arpm[] = new int[5];
 
 void setup() {
 
@@ -73,7 +73,7 @@ void setup() {
   settingsUpButton.resize(0,40);
   settingsDownButton = loadImage("Picture2.png");
   settingsDownButton.resize(0,40);
-  frameRate(30); 
+  
   
   f = createFont("Arial",16,true);
   myPort = new Serial(this, Serial.list()[0], 9600);
@@ -354,7 +354,9 @@ void getValue(){
       if(nums.length == 3){
         currentPH = int(nums[1]);
         currentTemp = int(nums[0]);
-        currentRPM = int(nums[2]);//averageRPM(int(nums[2]));
+        if ((str(nums[2])).length() > 0){
+          currentRPM = averageRPM(int(nums[2]));
+        }
         println(nums);
   
       }
